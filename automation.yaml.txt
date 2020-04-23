@@ -1,0 +1,94 @@
+- id: 'set_positive' #if the "-" button is pressed on the display, set the new value on card, page 0 of desplay
+  alias: Set Temperature
+  description: ''
+  trigger:
+  - entity_id: binary_sensor.set_down 
+    from: 'off'
+    platform: state
+    to: 'on'
+  condition: []
+  action:
+  - data_template:
+      temperature: '{{states.sensor.set_temperature.state | float - 0.5}}'
+    entity_id: climate.termostato_nextion
+    service: climate.set_temperature
+- id: 'set_negative' #if the "+" button is pressed on the display, set the new value on card page 0 of desplay
+  alias: Set Temperature up
+  description: ''
+  trigger:
+  - entity_id: binary_sensor.set_up
+    from: 'off'
+    platform: state
+    to: 'on'
+  condition: []
+  action:
+  - data_template:
+      temperature: '{{states.sensor.set_temperature.state | float + 0.5}}'
+    entity_id: climate.termostato_nextion
+    service: climate.set_temperature
+- id: 'button_off' #turn the heater off from the power button of the diplay
+  alias: Turn Heater Off
+  description: ''
+  trigger:
+  - entity_id: binary_sensor.turn_heater_off
+    from: 'off'
+    platform: state
+    to: 'on'
+  condition: []
+  action:
+  - data_template:
+      hvac_mode: 'off'
+    entity_id: climate.termostato_nextion
+    service: climate.set_hvac_mode
+- id: 'button_on' #turn the heater on from the power button of the diplay
+  alias: Turn Heater ON
+  description: ''
+  trigger:
+  - entity_id: binary_sensor.turn_heater_on
+    from: 'off'
+    platform: state
+    to: 'on'
+  condition: []
+  action:
+  - data_template:
+      hvac_mode: heat
+    entity_id: climate.termostato_nextion
+    service: climate.set_hvac_mode
+- id: 'notification' #send notification for the status change of the heater
+  alias: Heater mode
+  description: ''
+  trigger:
+  - entity_id: sensor.hvac_mode
+    from: 'off'
+    platform: state
+    to: heating
+  - entity_id: sensor.hvac_mode
+    from: 'off'
+    platform: state
+    to: idle
+  - entity_id: sensor.hvac_mode
+    from: idle
+    platform: state
+    to: 'off'
+  - entity_id: sensor.hvac_mode
+    from: heating
+    platform: state
+    to: 'off'
+  - entity_id: sensor.hvac_mode
+    from: heating
+    platform: state
+    to: idle
+  - entity_id: sensor.hvac_mode
+    from: idle
+    platform: state
+    to: heating
+  condition: []
+  action:
+  - data:
+      message: Heater is {{state_attr('climate.termostato_nextion', 'hvac_action')}}
+      title: Heater Status
+    service: persistent_notification.create
+  - data:
+      message: Heater is {{state_attr('climate.termostato_nextion', 'hvac_action')}}
+      title: Heater Status
+    service: notify.notify

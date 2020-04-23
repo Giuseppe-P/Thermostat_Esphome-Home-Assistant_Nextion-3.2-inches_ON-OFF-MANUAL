@@ -1,0 +1,270 @@
+esphome:
+  name: xxxxxxxxxx
+  platform: xxxxxxxxxx
+  board: xxxxxxx
+
+wifi:
+  ssid: "xxxxxxxxxxxx"
+  password: "xxxxxxxxxxxx"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "xxxxxxxxxxxxxxxx"
+    password: "xxxxxxxxxx"
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+
+
+dallas:
+  - pin: GPIO5
+  #0x0E041623899DFF28
+
+  
+switch:
+  - platform: gpio
+    name: "Heating"
+    id: "Heating_D3"
+    pin: GPIO4        
+    
+sensor:
+  - platform: dallas
+    address: 0x0E041623899DFF28
+    name: "Temperatura"
+    id: temp_dallas_1 
+    
+  - platform: homeassistant #configuration.yaml sensor for the "set temperature" value
+    entity_id: sensor.set_temp
+    id: set_temperature
+    
+  - platform: template
+    name: "Set Temperature"
+    lambda: |-
+      id(set_temp) = id(set_temperature).state;
+        return id(set_temp);
+    update_interval: 300ms
+      
+  - platform: uptime
+    name: Uptime Sensor Termostato
+    
+  - platform: wifi_signal
+    name: "WiFi Signal Termostato"
+    update_interval: 60s
+    
+text_sensor:
+  - platform: homeassistant #configuration.yaml sensor for the state of the thermostat
+    entity_id: sensor.hvac_mode
+    id: hvac_mode 
+
+  - platform: template
+    name: "blocco"
+    id: blocco_stato 
+    internal: true
+    
+interval:
+  - interval: 5s
+    then:
+     - if:
+        condition:
+          api.connected:
+        then:
+         lambda: |-
+          if (id(nex_page)==10){
+          }else{
+          id(nex_page) = 11;
+          }
+        else:
+         lambda: |-
+          if (id(nex_page)==8){
+          }else{
+          id(nex_page) = 9;
+          }
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+    
+display:
+  - platform: nextion
+    id: clima_nextion
+    update_interval: 300ms
+    lambda: |-
+     // Do not wait for ACK - it slows down the process, and has no use
+     it.set_wait_for_ack(false);
+     
+     //blocco le scritture temp sul display se non cambia
+
+     if (id(temp_dallas_1).state != id(blocco_temp)){
+     it.set_component_text_printf("temp","%.1f",id(temp_dallas_1).state); //Set the sensor's temperature on the display
+          it.set_component_text_printf("temp_page1","%.1f",id(temp_dallas_1).state); //Set the sensor's temperature on the display
+     }
+     id(blocco_temp) = id(temp_dallas_1).state;
+     
+     if (id(set_temp) != id(blocco_set)){
+     it.set_component_text_printf("setpoint","%.1f",id(set_temperature).state); //Set the sensor's temperature on the display
+     }
+     id(blocco_set) = id(set_temp);
+
+     
+     if (id(hvac_mode).state != id(blocco_stato).state){
+     
+     if (id(hvac_mode).state == "off") {
+     it.send_command_printf  ("b0.picc=1");
+     it.send_command_printf  ("b1.picc=0");
+     it.send_command_printf  ("t3.picc=0");
+     it.set_component_text_printf("stato","%s","Spento"); //set the state of the heater on the display
+     }
+     if (id(hvac_mode).state == "heating"){
+     it.send_command_printf  ("b0.picc=0");
+     it.send_command_printf  ("b1.picc=1");
+     it.send_command_printf  ("t3.picc=1");
+     it.set_component_text_printf("stato","%s","Riscaldamenti"); //set the state of the heater on the display
+     }
+     if (id(hvac_mode).state == "idle"){
+     it.send_command_printf  ("b0.picc=0");
+     it.send_command_printf  ("b1.picc=1");
+     it.send_command_printf  ("t3.picc=2");
+     it.set_component_text_printf("stato","%s","Inattivo"); //set the state of the heater on the display
+     }
+     id(blocco_stato).state = id(hvac_mode).state;
+     }
+     
+     if (id(on_off_manual) != id(blocco_manual)) {
+      if (id(Heating_D3).state) {
+        it.send_command_printf  ("b3.picc=1");
+        it.send_command_printf  ("b2.picc=0");
+       }else{
+         it.send_command_printf  ("b3.picc=0");
+         it.send_command_printf  ("b2.picc=1");
+       }
+        id(blocco_manual) = id(on_off_manual);
+     }
+     
+  - platform: nextion
+    id: nextion_stamp_ora
+    update_interval: 40s
+    lambda: |-
+     auto data_text = id(homeassistant_time).now().strftime("%d-%m-%Y-%H:%M");
+     it.set_component_text("data", data_text.c_str());
+     auto time_text = id(homeassistant_time).now().strftime("%H:%M");
+     it.set_component_text("t0", time_text.c_str());
+
+     
+  - platform: nextion
+    update_interval: 5s
+    id: nextion_page
+    lambda: |-
+     if (id(nex_page)==11) {
+     it.goto_page ( "page0");
+     id(nex_page) = 10;
+     }
+     if (id(nex_page)==9) {
+     it.goto_page ( "page1");
+     id(nex_page) = 8;
+     }
+
+      
+binary_sensor:    
+  - platform: status
+    name: "ESP TERMOSTATO"
+    
+  - platform: nextion
+    page_id: 0
+    component_id: 6
+    id: set_up 
+    name: "set up"
+    on_release:
+      lambda: |-
+         id(set_temp) = id(set_temp) + 0.5;
+         if (id(set_temp) == 31){
+          id(set_temp) = 30.0;
+          }
+
+  - platform: nextion
+    page_id: 0
+    component_id: 7
+    id: set_down 
+    name: "set down"
+    on_release:
+      lambda: |-
+       id(set_temp) = id(set_temp) - 0.5; 
+        if (id(set_temp) == 14) {
+         id(set_temp) = 15.0;
+         }
+
+  - platform: nextion
+    page_id: 0
+    component_id: 4
+    id: heater_off 
+    name: "Turn Heater Off"
+        
+  - platform: nextion
+    page_id: 0
+    component_id: 5
+    id: heater_on
+    name: "Turn Heater On"
+
+  - platform: nextion
+    page_id: 1
+    component_id: 2
+    id: heater_off_local 
+    name: "Turn Heater Off"
+    on_release:
+    - then:
+        - switch.turn_off: Heating_D3
+    - then:
+        lambda: |-
+          id(on_off_manual) = 0;
+
+  - platform: nextion
+    page_id: 1
+    component_id: 3
+    id: heater_on_local 
+    name: "Turn Heater On"
+    on_release:
+    - then:
+        - switch.turn_on: Heating_D3
+    - then:
+        lambda: |-
+          id(on_off_manual) = 1;
+
+uart:
+  rx_pin: GPIO3
+  tx_pin: GPIO2
+  baud_rate: 9600    
+
+globals:
+
+  - id: set_temp
+    type: float
+    initial_value: '15.0'
+    restore_value: no
+  - id: nex_page             
+    type: int
+    initial_value: '11'
+    restore_value: no
+  - id: on_off_manual           
+    type: int
+    initial_value: '0'
+    restore_value: no
+  
+  - id: blocco_manual             
+    type: int
+    initial_value: '3'
+    restore_value: yes
+  - id: blocco_temp            
+    type: float
+    initial_value: '0.0'
+    restore_value: yes
+  - id: blocco_set            
+    type: float
+    initial_value: '0.0'
+    restore_value: yes
+      

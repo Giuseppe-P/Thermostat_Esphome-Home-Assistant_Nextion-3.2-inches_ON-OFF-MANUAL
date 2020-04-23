@@ -1,0 +1,18 @@
+#aggiungi a configuration yaml
+
+climate:
+  - platform: generic_thermostat
+    name: termostato_nextion
+    heater: switch.Heating
+    target_sensor: sensor.temp_dallas_1
+    target_temp: 17
+sensor:
+  - platform: template
+    sensors:
+      set_temp:
+        value_template: "{{states.climate.termostato_nextion.attributes.temperature}}" #get the "set temperature" from lavelace card"
+ 
+  - platform: template
+    sensors:
+      hvac_mode:
+        value_template: "{{state_attr('climate.termostato_nextion', 'hvac_action')}}" #get the heater state from lavelace card"
