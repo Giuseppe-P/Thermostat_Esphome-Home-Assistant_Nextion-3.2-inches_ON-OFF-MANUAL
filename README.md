@@ -12,9 +12,9 @@ NEXTION documentation:
 https://nextion.tech/
 
 Hardware needed:
-1 - RaspberryPi 3 or higher
-2 - ESP8266-12 chip
-3 - Touch Screen Panel NEXTION 3.2 "
+RaspberryPi 3 or higher
+ESP8266-12 chip
+Touch Screen Panel NEXTION 3.2 "
 
 Software:
 1 - download and copy home assistant image on sd card for raspberryPi
