@@ -139,8 +139,7 @@ display:
        }
         id(blocco_manual) = id(on_off_manual);
       }
-      //it.set_backlight_brightness(100);
-
+     
      
   - platform: nextion
     id: nextion_stamp_ora
