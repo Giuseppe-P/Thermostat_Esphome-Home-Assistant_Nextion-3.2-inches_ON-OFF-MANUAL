@@ -20,7 +20,8 @@ logger:
 # Enable Home Assistant API
 api:
 
-ota: 
+ota:
+
 
 dallas:
   - pin: GPIO5
@@ -48,7 +49,7 @@ sensor:
     lambda: |-
       id(set_temp) = id(set_temperature).state;
         return id(set_temp);
-    update_interval: 400ms
+    update_interval: 300ms
       
   - platform: uptime
     name: Uptime Sensor Termostato
@@ -95,12 +96,17 @@ display:
     id: clima_nextion
     update_interval: 300ms
     lambda: |-
+     // Do not wait for ACK - it slows down the process, and has no use
      it.set_wait_for_ack(false);
+     
+     //blocco le scritture temp sul display se non cambia
+
      if (id(temp_dallas_1).state != id(blocco_temp)){
      it.set_component_text_printf("temp","%.1f",id(temp_dallas_1).state); //Set the sensor's temperature on the display
-     it.set_component_text_printf("temp_page1","%.1f",id(temp_dallas_1).state); //Set the sensor's temperature on the display
+          it.set_component_text_printf("temp_page1","%.1f",id(temp_dallas_1).state); //Set the sensor's temperature on the display
      }
      id(blocco_temp) = id(temp_dallas_1).state;
+     
      if (id(set_temp) != id(blocco_set)){
      it.set_component_text_printf("setpoint","%.1f",id(set_temperature).state); //Set the sensor's temperature on the display
      }
@@ -108,6 +114,7 @@ display:
 
      
      if (id(hvac_mode).state != id(blocco_stato).state){
+     
      if (id(hvac_mode).state == "off") {
      it.send_command_printf  ("b0.picc=1");
      it.send_command_printf  ("b1.picc=0");
@@ -138,14 +145,12 @@ display:
          it.send_command_printf  ("b2.picc=1");
        }
         id(blocco_manual) = id(on_off_manual);
-      }
-     
+     }
      
   - platform: nextion
     id: nextion_stamp_ora
     update_interval: 40s
     lambda: |-
-     it.set_wait_for_ack(false);
      auto data_text = id(homeassistant_time).now().strftime("%d-%m-%Y-%H:%M");
      it.set_component_text("data", data_text.c_str());
      auto time_text = id(homeassistant_time).now().strftime("%H:%M");
@@ -156,7 +161,6 @@ display:
     update_interval: 5s
     id: nextion_page
     lambda: |-
-     it.set_wait_for_ack(false);
      if (id(nex_page)==11) {
      it.goto_page ( "page0");
      id(nex_page) = 10;
@@ -174,7 +178,7 @@ binary_sensor:
   - platform: nextion
     page_id: 0
     component_id: 6
-    id: set_up #custom sensor for the power button on the display
+    id: set_up 
     name: "set up"
     on_release:
       lambda: |-
@@ -186,7 +190,7 @@ binary_sensor:
   - platform: nextion
     page_id: 0
     component_id: 7
-    id: set_down #custom sensor for the power button on the display
+    id: set_down 
     name: "set down"
     on_release:
       lambda: |-
@@ -198,21 +202,19 @@ binary_sensor:
   - platform: nextion
     page_id: 0
     component_id: 4
-    id: heater_off #custom sensor for the power button on the display
+    id: heater_off 
     name: "Turn Heater Off"
-
         
   - platform: nextion
     page_id: 0
     component_id: 5
-    id: heater_on #custom sensor for the power button on the display
+    id: heater_on
     name: "Turn Heater On"
-
 
   - platform: nextion
     page_id: 1
     component_id: 2
-    id: heater_off_local #custom sensor for the power button on the display
+    id: heater_off_local 
     name: "Turn Heater Off"
     on_release:
     - then:
@@ -224,7 +226,7 @@ binary_sensor:
   - platform: nextion
     page_id: 1
     component_id: 3
-    id: heater_on_local #custom sensor for the power button on the display
+    id: heater_on_local 
     name: "Turn Heater On"
     on_release:
     - then:
@@ -244,24 +246,25 @@ globals:
     type: float
     initial_value: '15.0'
     restore_value: no
-  - id: nex_page            
+  - id: nex_page             
     type: int
     initial_value: '11'
     restore_value: no
-  - id: on_off_manual            
+  - id: on_off_manual           
     type: int
     initial_value: '0'
     restore_value: no
   
   - id: blocco_manual             
     type: int
-    initial_value: '0'
-    restore_value: no
-  - id: blocco_temp             
+    initial_value: '3'
+    restore_value: yes
+  - id: blocco_temp            
     type: float
     initial_value: '0.0'
-    restore_value: no
-  - id: blocco_set             
+    restore_value: yes
+  - id: blocco_set            
     type: float
     initial_value: '0.0'
-    restore_value: no
+    restore_value: yes
+      
