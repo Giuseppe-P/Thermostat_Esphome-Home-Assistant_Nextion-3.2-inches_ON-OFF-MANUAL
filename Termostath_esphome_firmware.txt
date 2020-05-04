@@ -22,7 +22,7 @@ api:
 
 ota:
 
-
+ 
 dallas:
   - pin: GPIO5
   #0x0E041623899DFF28
@@ -140,9 +140,11 @@ display:
       if (id(Heating_D3).state) {
         it.send_command_printf  ("b3.picc=1");
         it.send_command_printf  ("b2.picc=0");
+        it.set_component_text_printf("stato1","%s","Accesi"); //set the state of the heater on the display
        }else{
          it.send_command_printf  ("b3.picc=0");
          it.send_command_printf  ("b2.picc=1");
+         it.set_component_text_printf("stato1","%s","Spenti"); //set the state of the heater on the display
        }
         id(blocco_manual) = id(on_off_manual);
      }
@@ -267,4 +269,3 @@ globals:
     type: float
     initial_value: '0.0'
     restore_value: yes
-      
