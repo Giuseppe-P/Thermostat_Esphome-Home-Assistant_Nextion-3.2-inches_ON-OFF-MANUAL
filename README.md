@@ -1,5 +1,8 @@
 # Thermostat-Esphome-Nextion-3.2-
 
+This version allows you to manage the thermostat via Home Assistant and in the absence of the server simply ON / OFF in manual mode. 
+To carry out the project with logic even in the absence of Home Assistant and therefore in offline mode, I refer you to the specific version, always in my repository.
+
 Home Assistant - Thermostat Touch Nextion - Firmware ESPHOME
 
 This is a generic Home Assistant thermostat, managed by an ESP8266 chip and a 3.2 "Nextion touch screen panel.
