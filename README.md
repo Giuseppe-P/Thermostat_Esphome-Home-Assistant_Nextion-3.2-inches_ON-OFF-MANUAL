@@ -29,6 +29,12 @@ Hardware needed:
 
 3 - Touch Screen Panel NEXTION 3.2 "
 
+4 - relay 5v (ho utilizzato un circuito a transistor, ma potete usare una board pronta)
+
+6 - ds18b20
+
+7 - alimentatore da 220v a 5v come in foto
+
 Software:
 
 1 - download and copy home assistant image on sd card for raspberryPi
