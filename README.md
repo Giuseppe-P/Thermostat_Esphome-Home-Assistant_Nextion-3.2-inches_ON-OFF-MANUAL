@@ -1,3 +1,7 @@
+No longer functional.  Please refer to the new version
+
+https://github.com/Giuseppe-P/Climate-thermostat-esphome-nextion
+
 # Thermostat - Esphome Home Assistant - Nextion-3.2 inches 
 
 This version allows you to manage the thermostat via Home Assistant and in the absence of the server simply ON / OFF in manual mode touch nextion.
